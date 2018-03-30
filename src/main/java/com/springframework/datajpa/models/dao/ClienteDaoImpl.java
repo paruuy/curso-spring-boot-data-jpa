@@ -6,7 +6,6 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 
 import org.springframework.stereotype.Repository;
-import org.springframework.transaction.annotation.Transactional;
 
 import com.springframework.datajpa.models.entity.Cliente;
 
@@ -18,15 +17,29 @@ public class ClienteDaoImpl implements IClienteDao {
 	
 	@SuppressWarnings("unchecked")
 	@Override
-	@Transactional(readOnly=true) //indica que el metodo es transaccional. Si era un insert/update seria sin readonly
 	public List<Cliente> findAll() {
 		return em.createQuery("from Cliente").getResultList();
 	}
 
 	@Override
-	@Transactional
 	public void save(Cliente cliente) {
-		em.persist(cliente);
+		//Este if significa que se o cliente tem ID e obtido da Base de dados e seria para 
+		// atualizar os dados, senão e um novo cliente para add na BD e vai vir com id null
+		if(cliente.getId() != null && cliente.getId() > 0){
+			em.merge(cliente);
+		}else{
+			em.persist(cliente);
+		}
+	}
+
+	@Override
+	public Cliente findOne(Long id) {
+		return em.find(Cliente.class,id);
+	}
+
+	@Override
+	public void delete(Long id) {
+		em.remove(findOne(id));
 	}
 
 }
